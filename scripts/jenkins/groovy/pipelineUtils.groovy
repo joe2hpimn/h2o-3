@@ -110,6 +110,18 @@ class PipelineUtils {
         return stageEndNodesInPrevBuild.find{it.getError() != null} == null
     }
 
+    void unpackTestPackage(final context, final String component, final String stageDir) {
+        context.echo "###### Pulling test package. ######"
+        context.step([$class              : 'CopyArtifact',
+                      projectName         : context.env.JOB_NAME,
+                      fingerprintArtifacts: true,
+                      filter              : "h2o-3/test-package-${component}.zip, h2o-3/build/h2o.jar",
+                      selector            : [$class: 'SpecificBuildSelector', buildNumber: context.env.BUILD_ID],
+                      target              : stageDir + '/'
+        ])
+        context.sh "cd ${stageDir}/h2o-3 && unzip -q -o test-package-${component}.zip && rm test-package-${component}.zip"
+    }
+
 }
 
 return this

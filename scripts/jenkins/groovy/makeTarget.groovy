@@ -19,15 +19,27 @@ def call(body) {
   if (config.hasJUnit == null) {
     config.hasJUnit = true
   }
+
+  if (config.activatePythonEnv == null) {
+    config.activatePythonEnv = true
+  }
+  if (config.activateR == null) {
+    config.activateR = true
+  }
+
   config.h2o3dir = config.h2o3dir ?: 'h2o-3'
 
   if (config.customBuildAction == null) {
     config.customBuildAction = """
-      echo "Activating Python ${env.PYTHON_VERSION}"
-      . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
+      if [ "${config.activatePythonEnv}" = 'true' ]; then
+        echo "Activating Python ${env.PYTHON_VERSION}"
+        . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
+      fi
 
-      echo "Activating R ${env.R_VERSION}"
-      activate_R_${env.R_VERSION}
+      if [ "${config.activateR}" = 'true' ]; then
+        echo "Activating R ${env.R_VERSION}"
+        activate_R_${env.R_VERSION}
+      fi
 
       echo "Running Make"
       make -f ${config.makefilePath} ${config.target}
@@ -59,6 +71,7 @@ def call(body) {
 private void execMake(final String buildAction, final String h2o3dir) {
   sh """
     export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    export PATH=\${JAVA_HOME}/bin:\${PATH}
 
     cd ${h2o3dir}
     echo "Linking small and bigdata"
